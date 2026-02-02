@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Czy zostaniesz moją walentynką?</title>
+  <style>
+    :root{
+      --bg1:#fff0f3;
+      --bg2:#ffe3ea;
+      --card:#ffffffcc;
+      --text:#2b2b2b;
+      --yes:#ff2d55;
+      --yes2:#ff4d6d;
+      --no:#6b7280;
+      --shadow: 0 20px 60px rgba(0,0,0,.12);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100dvh;
+      display:grid;
+      place-items:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, var(--bg2), transparent 55%),
+        radial-gradient(1200px 800px at 80% 90%, var(--bg2), transparent 55%),
+        linear-gradient(180deg, var(--bg1), #fff);
+      overflow:hidden;
+    }
+
+    .card{
+      width:min(720px, 92vw);
+      padding: clamp(18px, 3.5vw, 32px);
+      border-radius: 22px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .roses{
+      width:100%;
+      height: clamp(300px, 45vw, 420px);
+      border-radius: 18px;
+      object-fit: cover;
+      object-position: center center;
+      display:block;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      margin-bottom: 18px;
+      background:black;
+    }
+
+    h1{
+      margin: 0 0 18px 0;
+      font-size: clamp(22px, 3.4vw, 34px);
+      text-align:center;
+    }
+
+    .buttons{
+      display:flex;
+      gap: 14px;
+      justify-content:center;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    button{
+      border:0;
+      padding: 14px 20px;
+      border-radius: 999px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor:pointer;
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+
+    .yes{
+      background: linear-gradient(135deg, var(--yes), var(--yes2));
+      color:white;
+      box-shadow: 0 14px 30px rgba(255,45,85,.28);
+      transform: scale(var(--yesScale, 1));
+    }
+
+    .no{
+      background:#eef2f7;
+      color:#1f2937;
+      box-shadow: 0 10px 22px rgba(107,114,128,.18);
+      opacity: var(--noOpacity, 1);
+      transform: scale(var(--noScale, 1));
+      white-space: nowrap;
+    }
+
+    .result{
+      display:none;
+      text-align:center;
+      padding: 20px 0 6px 0;
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 900;
+      color: var(--yes);
+    }
+
+    .hidden{ display:none !important; }
+
+    .hearts-layer{
+      pointer-events:none;
+      position:fixed;
+      inset:0;
+      overflow:hidden;
+      z-index: 999;
+    }
+
+    .heart{
+      position:absolute;
+      left: var(--x, 50%);
+      top: 110%;
+      font-size: var(--size, 22px);
+      opacity: 0;
+      animation: floatUp var(--dur, 2400ms) ease-in forwards;
+    }
+
+    @keyframes floatUp{
+      0%   { opacity: 0; transform: translateY(0); }
+      10%  { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-140vh); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="card">
+
+    <img
+      class="roses"
+      alt="Walentynkowe zdjęcie"
+      src="walentynka.jpg.png"
+    />
+
+    <h1 id="question">Czy zostaniesz moją walentynką?</h1>
+
+    <div class="buttons" id="buttons">
+      <button class="yes" id="yesBtn" style="--yesScale:1">TAK</button>
+      <button class="no" id="noBtn" style="--noScale:1; --noOpacity:1">NIE</button>
+    </div>
+
+    <div class="result" id="result">Najlepsza decyzja ever ❤️</div>
+  </div>
+
+  <div class="hearts-layer" id="heartsLayer"></div>
+
+  <script>
+    const yesBtn = document.getElementById('yesBtn');
+    const noBtn  = document.getElementById('noBtn');
+    const question = document.getElementById('question');
+    const buttons = document.getElementById('buttons');
+    const result = document.getElementById('result');
+    const heartsLayer = document.getElementById('heartsLayer');
+
+    let noClicks = 0;
+
+    const noPhrases = [
+      "jesteś tego pewna?",
+      "na pewno?",
+      "ej no… przemyśl to 🥺",
+      "ostatnia szansa 😳",
+      "to boli 💔",
+      "kliknij TAK 😄"
+    ];
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    function updateSizes(){
+      const yesScale = clamp(1 + noClicks * 0.18, 1, 3.2);
+      const noScale = clamp(1 - noClicks * 0.06, 0.72, 1);
+      const noOpacity = clamp(1 - noClicks * 0.10, 0.25, 1);
+
+      yesBtn.style.setProperty('--yesScale', yesScale.toFixed(2));
+      noBtn.style.setProperty('--noScale', noScale.toFixed(2));
+      noBtn.style.setProperty('--noOpacity', noOpacity.toFixed(2));
+    }
+
+    noBtn.addEventListener('click', () => {
+      noClicks++;
+      if(noClicks === 1){
+        noBtn.textContent = "jesteś tego pewna?";
+      } else {
+        noBtn.textContent = noPhrases[Math.min(noClicks-1, noPhrases.length-1)];
+      }
+      updateSizes();
+    });
+
+    function spawnHearts(count = 80){
+      const emojis = ["❤️","💖","💘","💕","💗","💞"]; 
+      const w = window.innerWidth;
+
+      for(let i=0;i<count;i++){
+        const h = document.createElement('div');
+        h.className = 'heart';
+        h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        h.style.setProperty('--x', Math.random()*w + 'px');
+        h.style.setProperty('--size', 16 + Math.random()*28 + 'px');
+        h.style.setProperty('--dur', 1600 + Math.random()*2200 + 'ms');
+        heartsLayer.appendChild(h);
+        setTimeout(()=>h.remove(), 3000);
+      }
+    }
+
+    yesBtn.addEventListener('click', () => {
+      question.classList.add('hidden');
+      buttons.classList.add('hidden');
+      result.style.display = 'block';
+      spawnHearts(120);
+    });
+
+    updateSizes();
+  </script>
+</body>
+</html>
